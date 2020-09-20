@@ -15,11 +15,20 @@ int main( int argc, char** argv )
 
 bool Chip8Init( chip8_hw* chip );
 {
-    memset( chip->v, 0, REGISTER_V_COUNT );
-    memset( chip->i, 0, REGISTER_I_LEN );
+    memset( chip->V    , 0, REGISTER_V_COUNT );
+    memset( chip->stack, 0, CHIP8_STACK_LEN  );
+    memset( chip->gfx  , 0, CHPI8_GFX_LEN    );
 
-    chip8->ram = (unsigned char*)calloc( CHIP8_RAM_LEN, sizeof(unsigned char) )
-    if ( chip8->ram == NULL )
+    chip->I  = 0;
+    chip->PC = 0;
+    chip->DT = 0;
+    chip->ST = 0;
+    chip->stack_top = 0;
+
+    chip->get_key = NULL;
+
+    chip->ram = (unsigned char*)calloc( CHIP8_RAM_LEN, sizeof(unsigned char) )
+    if ( chip->ram == NULL )
     {
         return false;
     }

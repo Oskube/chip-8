@@ -59,7 +59,15 @@ instr_fptr DecodeOpcode( unsigned opcode )
 
 instr_fptr _0nnn_dec( unsigned opcode )
 {
-
+    if (GET_NIBBLE(opcode, 1) == 0xe)
+    {
+        if (GET_NIBBLE(opcode, 0) == 0xe)
+        {
+            return _00EE;
+        }
+        return _00E0;
+    }
+    return _0nnn;
 }
 
 instr_fptr _8XYn_dec( unsigned opcode )
