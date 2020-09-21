@@ -199,7 +199,7 @@ void _8xyE(chip8_hw* chip, unsigned opcode)
     unsigned char* y = NULL;
 
     GetXY(chip, opcode, &x, &y);
-    if (*x & 0x80 == 0)
+    if ((*x & 0x80) == 0)
     {
         chip->V[0xf] = 0;
     }

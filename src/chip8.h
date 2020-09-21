@@ -1,6 +1,8 @@
 #ifndef CHIP8_H
 #define CHIP8_H
 
+#include <stdbool.h>
+
 #define CHIP8_PROG_START    0x200
 #define CHIP8_RAM_LEN       0xE90
 #define CHIP8_PROG_MAX_LEN  ( CHIP8_RAM_LEN - CHIP8_PROG_START )

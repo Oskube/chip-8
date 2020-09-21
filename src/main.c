@@ -5,8 +5,8 @@
 
 bool Chip8Init( chip8_hw* chip );
 void Chip8Free( chip8_hw* chip );
-
 bool Chip8LoadProgram( const char* file );
+bool Chip8Dump( chip8_hw* chip, FILE* output );
 
 int main( int argc, char** argv )
 {

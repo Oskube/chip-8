@@ -1,3 +1,7 @@
+#ifndef OPCODES_H
+#define OPCODES_H
+
+#include <stddef.h>
 #include "chip8.h"
 
 #define GET_NIBBLE(val, nib)  ((val >> (nib*4)) & 0xf)
@@ -44,7 +48,7 @@ void _invalid_op(chip8_hw*, unsigned);
 
 typedef struct {
     unsigned mask;
-    unsigned char* fmt;
+    char*    fmt;
 } operand;
 
 static const operand oper_0nnn = { 0x0fff, "%d"  };
@@ -59,7 +63,7 @@ static const operand oper_i    = { 0, "I"  };
 static const operand oper_k    = { 0, "K"  };
 static const operand oper_f    = { 0, "F"  };
 static const operand oper_b    = { 0, "B"  };
-static const operand oper_null = { 0, NULL};
+static const operand oper_null = { 0, NULL };
 
 typedef struct {
     instr_fptr     fun;      /**< Pointer to function implementing opcode */
@@ -68,7 +72,7 @@ typedef struct {
     const operand  operands[3];
 } mnemonic;
 
-mnemonic mnemonic_list[] = {
+const mnemonic mnemonic_list[] = {
     { _00E0, 0x00e0, "CLS" , { oper_null }},
     { _00EE, 0x00ee, "RET" , { oper_null }},
     { _1nnn, 0x1000, "JMP" , { oper_0nnn, oper_null, oper_null }},
@@ -105,3 +109,4 @@ mnemonic mnemonic_list[] = {
     { _Fx65, 0xf065, "MOV" , { oper_0x00, oper_i_br, oper_null }},
 };
 
+#endif // OPCODES_H
