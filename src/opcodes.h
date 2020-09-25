@@ -63,23 +63,25 @@ static const operand oper_i    = { 0, "I"  };
 static const operand oper_k    = { 0, "K"  };
 static const operand oper_f    = { 0, "F"  };
 static const operand oper_b    = { 0, "B"  };
+static const operand oper_v0   = { 0, "V0" };
 static const operand oper_null = { 0, NULL };
 
+#define MAX_OPERANDS 3
 typedef struct {
     instr_fptr     fun;      /**< Pointer to function implementing opcode */
     unsigned short base;     /**< Opcode base, which will be replaced by operands */
     const char*    mnemonic; /**< Mnemonic format */
-    const operand  operands[3];
+    const operand  operands[MAX_OPERANDS];
 } mnemonic;
 
-const mnemonic mnemonic_list[] = {
+static const mnemonic mnemonic_list[] = {
     { _00E0, 0x00e0, "CLS" , { oper_null }},
     { _00EE, 0x00ee, "RET" , { oper_null }},
     { _1nnn, 0x1000, "JMP" , { oper_0nnn, oper_null, oper_null }},
     { _2nnn, 0x2000, "CALL", { oper_0nnn, oper_null, oper_null }},
-    { _3xnn, 0x3000, "SE " , { oper_0x00, oper_00nn, oper_null }},
+    { _3xnn, 0x3000, "SE"  , { oper_0x00, oper_00nn, oper_null }},
     { _4xnn, 0x4000, "SNE" , { oper_0x00, oper_00nn, oper_null }},
-    { _5xy0, 0x5000, "SE " , { oper_0x00, oper_00y0, oper_null }},
+    { _5xy0, 0x5000, "SE"  , { oper_0x00, oper_00y0, oper_null }},
     { _6xnn, 0x6000, "MOV" , { oper_0x00, oper_00nn, oper_null }},
     { _7xnn, 0x7000, "ADD" , { oper_0x00, oper_00nn, oper_null }},
     { _8xy0, 0x8000, "MOV" , { oper_0x00, oper_00y0, oper_null }},
@@ -89,11 +91,11 @@ const mnemonic mnemonic_list[] = {
     { _8xy4, 0x8004, "ADD" , { oper_0x00, oper_00y0, oper_null }},
     { _8xy5, 0x8005, "SUB" , { oper_0x00, oper_00y0, oper_null }},
     { _8xy6, 0x8006, "SHL" , { oper_0x00, oper_00y0, oper_null }},
-    { _8xy7, 0x8007, "SUB" , { oper_0x00, oper_00y0, oper_null }},
-    { _8xyE, 0x800e, "SHR" , { oper_0x00, oper_00y0, oper_null }},
+    { _8xy7, 0x8007, "SUBN", { oper_0x00, oper_00y0, oper_null }},
+    { _8xyE, 0x800e, "SHR" , { oper_0x00, oper_null, oper_null }}, /* y operand not used? */
     { _9xy0, 0x9000, "JNE" , { oper_0x00, oper_00y0, oper_null }},
-    { _Annn, 0xa000, "MOV" , { oper_0nnn, oper_null, oper_null }},
-    { _Bnnn, 0xb000, "JMP" , { oper_0nnn, oper_null, oper_null }},
+    { _Annn, 0xa000, "MOV" , { oper_i   , oper_0nnn, oper_null }},
+    { _Bnnn, 0xb000, "JMP" , { oper_v0  , oper_0nnn, oper_null }},
     { _Cxnn, 0xc000, "RND" , { oper_0x00, oper_00nn, oper_null }},
     { _Dxyn, 0xd000, "DRW" , { oper_0x00, oper_00y0, oper_000n }},
     { _Ex9E, 0xe000, "KE"  , { oper_0x00, oper_null, oper_null }},
@@ -107,6 +109,10 @@ const mnemonic mnemonic_list[] = {
     { _Fx33, 0xf033, "MOV" , { oper_b   , oper_0x00, oper_null }},
     { _Fx55, 0xf055, "MOV" , { oper_i_br, oper_0x00, oper_null }},
     { _Fx65, 0xf065, "MOV" , { oper_0x00, oper_i_br, oper_null }},
+    { NULL }
 };
+
+unsigned GetOperandCount(const mnemonic* m);
+unsigned ApplyMaskToValue(unsigned mask, unsigned value);
 
 #endif // OPCODES_H

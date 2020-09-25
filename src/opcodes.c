@@ -334,3 +334,30 @@ void _Fx65(chip8_hw* chip, unsigned opcode)
 void _invalid_op(chip8_hw* chip, unsigned opcode)
 {
 }
+
+unsigned GetOperandCount(const mnemonic* m)
+{
+    if (!m) return 0;
+    unsigned count = 0;
+    while (m->operands[ count ].fmt != NULL)
+    {
+        count++;
+        if (count >= MAX_OPERANDS) break;
+    }
+
+    return count;
+}
+
+unsigned ApplyMaskToValue(unsigned mask, unsigned value)
+{
+    if (mask == 0) return 0;
+
+    /* Move mask to left in a loop until mask & 0x1 return non-zero return number of shifts */
+    unsigned shift = 0;
+    for (unsigned m = ~mask; m & 0x1; m >>= 1)
+    {
+        shift++;
+    }
+
+    return mask & (value << shift);
+}
