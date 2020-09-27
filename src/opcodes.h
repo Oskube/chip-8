@@ -98,8 +98,8 @@ static const mnemonic mnemonic_list[] = {
     { _Bnnn, 0xb000, "JMP" , { oper_v0  , oper_0nnn, oper_null }},
     { _Cxnn, 0xc000, "RND" , { oper_0x00, oper_00nn, oper_null }},
     { _Dxyn, 0xd000, "DRW" , { oper_0x00, oper_00y0, oper_000n }},
-    { _Ex9E, 0xe000, "KE"  , { oper_0x00, oper_null, oper_null }},
-    { _ExA1, 0xe000, "KNE" , { oper_0x00, oper_null, oper_null }},
+    { _Ex9E, 0xe09e, "KE"  , { oper_0x00, oper_null, oper_null }},
+    { _ExA1, 0xe0a1, "KNE" , { oper_0x00, oper_null, oper_null }},
     { _Fx07, 0xf007, "MOV" , { oper_0x00, oper_dt  , oper_null }},
     { _Fx0A, 0xf00a, "MOV" , { oper_0x00, oper_k   , oper_null }},
     { _Fx15, 0xf015, "MOV" , { oper_dt  , oper_0x00, oper_null }},
@@ -112,7 +112,9 @@ static const mnemonic mnemonic_list[] = {
     { NULL }
 };
 
+unsigned GetMnemonicCount();
 unsigned GetOperandCount(const mnemonic* m);
 unsigned ApplyMaskToValue(unsigned mask, unsigned value);
+unsigned GetValueByMask(unsigned value, unsigned mask);
 
 #endif // OPCODES_H

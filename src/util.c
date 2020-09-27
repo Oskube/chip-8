@@ -37,8 +37,8 @@ bool WriteFile(const char* file, bool isBinary, unsigned char* data, unsigned le
 {
     FILE* f = NULL;
 
-    if (isBinary) f = fopen( file, "rb");
-    else          f = fopen( file, "r" );
+    if (isBinary) f = fopen( file, "wb");
+    else          f = fopen( file, "w" );
 
     if (!f) return false;
 

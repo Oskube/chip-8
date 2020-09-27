@@ -1,4 +1,6 @@
 #include "chip8.h"
 #include "opcodes.h"
 
-instr_fptr DecodeOpcode( unsigned );
+#define INVALID_OPCODE 0xffff
+
+unsigned DecodeOpcode( unsigned );

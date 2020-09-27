@@ -1,131 +1,55 @@
+#include <stdlib.h>
+
 #include "chip8.h"
 #include "decoder.h"
 #include "opcodes.h"
 
-/* Decoder functions */
-static instr_fptr _0nnn_dec(unsigned);
-static instr_fptr _8XYn_dec(unsigned);
-static instr_fptr _EXnn_dec(unsigned);
-static instr_fptr _FXnn_dec(unsigned);
-
-enum {
-    OP_OPCODE_PTR,
-    OP_DECODER_FUN,
-};
-
 typedef struct {
-    unsigned type;
-    union {
-        instr_fptr  fun;
-        instr_fptr  (*dec)(unsigned);
-    };
-} opcode_dec;
+    unsigned mask;
+    unsigned base;
+} opcode_info;
 
-#define OP_FN(fn)      { OP_OPCODE_PTR , .fun=fn }
-#define OP_DECODER(fn) { OP_DECODER_FUN, .dec=fn }
+static opcode_info* opcode_table = NULL;
+static unsigned     opcode_table_len = 0;
 
-const opcode_dec _1st_nibble[] = {
-    OP_DECODER(_0nnn_dec),
-    OP_FN(_1nnn),
-    OP_FN(_2nnn),
-    OP_FN(_3xnn),
-    OP_FN(_4xnn),
-    OP_FN(_5xy0),
-    OP_FN(_6xnn),
-    OP_FN(_7xnn),
-    OP_DECODER(_8XYn_dec),
-    OP_FN(_9xy0),
-    OP_FN(_Annn),
-    OP_FN(_Bnnn),
-    OP_FN(_Cxnn),
-    OP_FN(_Dxyn),
-    OP_DECODER(_EXnn_dec),
-    OP_DECODER(_FXnn_dec),
-};
-
-instr_fptr DecodeOpcode( unsigned opcode )
+void FreeOpcodeTable()
 {
-    unsigned char nibble = (opcode >> 24) & 0xf;
-    const opcode_dec* op = &_1st_nibble[ nibble ];
-    if ( op->type == OP_OPCODE_PTR )
-    {
-        return op->fun;
-    }
-    else
-    {
-        return op->dec( opcode );
-    }
+    if (opcode_table) free(opcode_table);
 }
 
-instr_fptr _0nnn_dec( unsigned opcode )
+void GenerateOpcodeTable()
 {
-    if (GET_NIBBLE(opcode, 1) == 0xe)
+    if (opcode_table != NULL) return;
+
+    unsigned list_size = GetMnemonicCount();
+    opcode_table = (opcode_info*)malloc(sizeof(opcode_info)*list_size);
+    if (!opcode_table) return;
+    opcode_table_len = list_size;
+
+    atexit(FreeOpcodeTable); // Free opcode table at exit
+
+    for (unsigned i = 0; i < list_size; i++)
     {
-        if (GET_NIBBLE(opcode, 0) == 0xe)
+        const mnemonic* m = &mnemonic_list[ i ];
+        opcode_table[i].base = m->base;
+        opcode_table[i].mask = 0;
+        for (unsigned j = 0; m->operands[ j ].fmt != NULL && j < MAX_OPERANDS; j++)
         {
-            return _00EE;
+            opcode_table[i].mask |= m->operands[ j ].mask;
         }
-        return _00E0;
+        opcode_table[i].mask = ~opcode_table[i].mask;
     }
-    return _0nnn;
 }
 
-const instr_fptr _8XYn_funs[0x10] = {
-    _8xy0,
-    _8xy1,
-    _8xy2,
-    _8xy3,
-    _8xy4,
-    _8xy5,
-    _8xy6,
-    _8xy7,
-    _invalid_op,
-    _invalid_op,
-    _invalid_op,
-    _invalid_op,
-    _invalid_op,
-    _invalid_op,
-    _8xyE,
-    _invalid_op
-};
-
-instr_fptr _8XYn_dec( unsigned opcode )
+unsigned DecodeOpcode(unsigned opcode)
 {
-    unsigned nib = GET_NIBBLE(opcode, 0);
-    return _8XYn_funs[ nib ];
-}
+    if (!opcode_table) GenerateOpcodeTable();
 
-instr_fptr _EXnn_dec( unsigned opcode )
-{
-    unsigned char cmp = opcode & 0xff;
-    if (cmp == 0x9e)
+    for (unsigned i=0; i < opcode_table_len; i++)
     {
-        return _Ex9E;
+        opcode_info* op = opcode_table+i;
+        if (op->base == (opcode & op->mask)) return i;
     }
-    else if (cmp == 0xa1)
-    {
-        return _ExA1;
-    }
-    return _invalid_op;
+
+    return INVALID_OPCODE;
 }
-
-instr_fptr _FXnn_dec( unsigned opcode )
-{
-    unsigned char cmp = opcode & 0xff;
-
-    switch (cmp)
-    {
-        case 0x07: return _Fx07;
-        case 0x0A: return _Fx0A;
-        case 0x15: return _Fx15;
-        case 0x18: return _Fx18;
-        case 0x1E: return _Fx1E;
-        case 0x29: return _Fx29;
-        case 0x33: return _Fx33;
-        case 0x55: return _Fx55;
-        case 0x65: return _Fx65;
-
-        default: return _invalid_op;
-    }
-}
-

@@ -335,6 +335,13 @@ void _invalid_op(chip8_hw* chip, unsigned opcode)
 {
 }
 
+unsigned GetMnemonicCount()
+{
+    unsigned i = 0;
+    for (; mnemonic_list[i].fun != NULL; i++);
+    return i;
+}
+
 unsigned GetOperandCount(const mnemonic* m)
 {
     if (!m) return 0;
@@ -360,4 +367,18 @@ unsigned ApplyMaskToValue(unsigned mask, unsigned value)
     }
 
     return mask & (value << shift);
+}
+
+unsigned GetValueByMask(unsigned value, unsigned mask)
+{
+    if (mask == 0) return 0;
+
+    /* Move mask to left in a loop until mask & 0x1 return non-zero return number of shifts */
+    unsigned shift = 0;
+    for (unsigned m = ~mask; m & 0x1; m >>= 1)
+    {
+        shift++;
+    }
+
+    return (value & mask) >> shift;
 }

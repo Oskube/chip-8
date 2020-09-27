@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-Wall
 TARGETS=assembler
-COMPONENTS=opcodes.o decoder.o
+COMPONENTS=util.o opcodes.o decoder.o
 COMMON=util.o opcodes.o
 
 all: $(COMPONENTS) assembler
 
-assembler: $(COMMON) src/assembler.c
+assembler: $(COMPONENTS) src/assembler.c
 	$(CC) -o $@ $^
 
 %.o: src/%.c
