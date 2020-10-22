@@ -31,7 +31,7 @@ void _0nnn(chip8_hw* chip, unsigned opcode)
 
 void _00E0(chip8_hw* chip, unsigned opcode)
 {
-    memset( chip->gfx, 0, CHPI8_GFX_LEN );
+    memset( chip->gfx, 0, CHIP8_GFX_LEN );
 }
 
 void _00EE(chip8_hw* chip, unsigned opcode)
@@ -43,7 +43,7 @@ void _00EE(chip8_hw* chip, unsigned opcode)
 
 void _1nnn(chip8_hw* chip, unsigned opcode)
 {
-    chip->PC = be16toh(opcode & 0xfff);
+    chip->PC = opcode & 0xfff;
 }
 
 void _2nnn(chip8_hw* chip, unsigned opcode)
@@ -58,7 +58,7 @@ void _3xnn(chip8_hw* chip, unsigned opcode)
     unsigned cmp = opcode & 0xff;
     if ( chip->V[reg] == cmp )
     {
-        chip->PC++;
+        chip->PC += 2;
     }
 }
 
@@ -68,7 +68,7 @@ void _4xnn(chip8_hw* chip, unsigned opcode)
     unsigned cmp = opcode & 0xff;
     if ( chip->V[reg] != cmp )
     {
-        chip->PC++;
+        chip->PC += 2;
     }
 }
 
@@ -78,7 +78,7 @@ void _5xy0(chip8_hw* chip, unsigned opcode)
     GetNibbles(opcode, nibbles);
     if (chip->V[ nibbles[1] ] == chip->V[ nibbles[2] ])
     {
-        chip->PC++;
+        chip->PC += 2;
     }
 }
 
@@ -219,18 +219,18 @@ void _9xy0(chip8_hw* chip, unsigned opcode)
     GetXY(chip, opcode, &x, &y);
     if (*x != *y)
     {
-        chip->PC++;
+        chip->PC += 2;
     }
 }
 
 void _Annn(chip8_hw* chip, unsigned opcode)
 {
-    chip->I = be16toh(opcode && 0xfff);
+    chip->I = opcode & 0xfff;
 }
 
 void _Bnnn(chip8_hw* chip, unsigned opcode)
 {
-    chip->PC= chip->V[0] + be16toh(opcode & 0xfff); /* TODO: problems with endianness?*/
+    chip->PC= chip->V[0] + (opcode & 0xfff);
 }
 
 void _Cxnn(chip8_hw* chip, unsigned opcode)
@@ -241,7 +241,37 @@ void _Cxnn(chip8_hw* chip, unsigned opcode)
 
 void _Dxyn(chip8_hw* chip, unsigned opcode)
 {
-    /* TODO */
+    unsigned pos = chip->I;
+    unsigned char nibbles[3] = {0};
+    GetNibbles(opcode, nibbles);
+
+    unsigned x = chip->V[ nibbles[2] ];
+    unsigned y = chip->V[ nibbles[1] ];
+
+    chip->V[0xf] = 0;
+    for (unsigned i = 0; i < nibbles[0]; i++, y++)
+    {
+        unsigned char sprite = chip->ram[ pos+i ];
+
+        y %= CHIP8_GFX_H;
+        for (unsigned j = 0; j < 8; j++, x++)
+        {
+            x %= CHIP8_GFX_W;
+
+            unsigned sprite_bit  = 0x80 >> (j%8); // Current bit in sprite space
+            unsigned bit  = 0x80 >> (x%8);        // Current bit in framebuffer space
+            unsigned byte = (x / 8) + (y * CHIP8_GFX_W / 8); // Byte in framebuffer where current pixel lies
+
+            if ((sprite & sprite_bit) == 0) continue;
+
+            // If pixel is unset: VF -> 1
+            if (chip->gfx[ byte ] & bit)
+            {
+                chip->V[0xf] = 1;
+            }
+            chip->gfx[ byte ] ^= bit;
+        }
+    }
 }
 
 void _Ex9E(chip8_hw* chip, unsigned opcode)
@@ -250,7 +280,7 @@ void _Ex9E(chip8_hw* chip, unsigned opcode)
     unsigned key = chip->get_key( false );
     if (key == chip->V[x])
     {
-        chip->PC++;
+        chip->PC += 2;
     }
 }
 
@@ -260,16 +290,17 @@ void _ExA1(chip8_hw* chip, unsigned opcode)
     unsigned key = chip->get_key( false );
     if (key != chip->V[x])
     {
-        chip->PC++;
+        chip->PC += 2;
     }
 }
 
 void _Fx07(chip8_hw* chip, unsigned opcode)
 {
     unsigned x = GET_NIBBLE(opcode, 2);
-    unsigned delay = chip->DT;
-    chip->V[x] = delay;
-} void _Fx0A(chip8_hw* chip, unsigned opcode)
+    chip->V[x] = chip->DT;
+}
+
+void _Fx0A(chip8_hw* chip, unsigned opcode)
 {
     unsigned x = GET_NIBBLE(opcode, 2);
     unsigned key = chip->get_key( true );
@@ -299,7 +330,7 @@ void _Fx1E(chip8_hw* chip, unsigned opcode)
 
 void _Fx29(chip8_hw* chip, unsigned opcode)
 {
-    /* TODO */
+    chip->I = CHIP8_RAM_CHARSET_BEGIN + CHIP8_CHAR_LEN * (opcode & 0xf);
 }
 
 void _Fx33(chip8_hw* chip, unsigned opcode)
@@ -334,6 +365,9 @@ void _Fx65(chip8_hw* chip, unsigned opcode)
 void _invalid_op(chip8_hw* chip, unsigned opcode)
 {
 }
+
+
+// Other functions
 
 unsigned GetMnemonicCount()
 {
