@@ -277,8 +277,7 @@ void _Dxyn(chip8_hw* chip, unsigned opcode)
 void _Ex9E(chip8_hw* chip, unsigned opcode)
 {
     unsigned x = GET_NIBBLE(opcode, 2);
-    unsigned key = chip->get_key( false );
-    if (key == chip->V[x])
+    if (chip->is_key_down(chip->V[x]))
     {
         chip->PC += 2;
     }
@@ -287,8 +286,7 @@ void _Ex9E(chip8_hw* chip, unsigned opcode)
 void _ExA1(chip8_hw* chip, unsigned opcode)
 {
     unsigned x = GET_NIBBLE(opcode, 2);
-    unsigned key = chip->get_key( false );
-    if (key != chip->V[x])
+    if (!chip->is_key_down(chip->V[x]))
     {
         chip->PC += 2;
     }
@@ -303,7 +301,7 @@ void _Fx07(chip8_hw* chip, unsigned opcode)
 void _Fx0A(chip8_hw* chip, unsigned opcode)
 {
     unsigned x = GET_NIBBLE(opcode, 2);
-    unsigned key = chip->get_key( true );
+    unsigned key = chip->get_key_blocking();
     chip->V[x] = key;
 }
 

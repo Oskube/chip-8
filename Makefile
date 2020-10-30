@@ -1,16 +1,24 @@
 CC=gcc
-CFLAGS=-Wall
-TARGETS=assembler
+CFLAGS=-Wall -g
+TARGETS=assembler emulator
 COMPONENTS=util.o opcodes.o decoder.o
 COMMON=util.o opcodes.o
 
-all: $(COMPONENTS) assembler
+# Raylib related
+INCLUDE=-I/usr/local/include
+LDLIBS=-lraylib
+COMPONENTS += raylib_ui.o
+
+all: $(TARGETS)
+
+emulator: $(COMPONENTS) src/main.c
+	$(CC) -o $@ $^ $(LDLIBS)
 
 assembler: $(COMPONENTS) src/assembler.c
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LDLIBS)
 
 %.o: src/%.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(INCLUDE) $(LDLIBS)
 
 .PHONY: clean
 clean:
