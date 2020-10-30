@@ -51,6 +51,7 @@ typedef struct {
     char*    fmt;
 } operand;
 
+static const operand oper_nnnn = { 0xffff, "%d"  };
 static const operand oper_0nnn = { 0x0fff, "%d"  };
 static const operand oper_00nn = { 0x00ff, "%d"  };
 static const operand oper_000n = { 0x000f, "%d"  };
@@ -109,6 +110,7 @@ static const mnemonic mnemonic_list[] = {
     { _Fx33, 0xf033, "MOV" , { oper_b   , oper_0x00, oper_null }},
     { _Fx55, 0xf055, "MOV" , { oper_i_br, oper_0x00, oper_null }},
     { _Fx65, 0xf065, "MOV" , { oper_0x00, oper_i_br, oper_null }},
+    { _invalid_op , 0x0000, "NOP" , { oper_nnnn, oper_null, oper_null }},
     { NULL }
 };
 

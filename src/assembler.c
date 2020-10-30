@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <endian.h>
 
 #include "decoder.h"
 #include "opcodes.h"
@@ -10,7 +11,7 @@
 
 static bool AppendString(char** buffer, unsigned* buffer_len, const char* new_str);
 static unsigned GetShiftFromMask(unsigned mask);
-static unsigned short EncodeInstruction(char* instruction);
+static bool EncodeInstruction(char* instruction, unsigned short* opcode);
 static bool DecodeInstruction(unsigned short instr, char* output);
 
 static unsigned Assemble(const char* source, const char* out_file);
@@ -85,12 +86,16 @@ unsigned Assemble(const char* source, const char* out_file)
     if (!output) return -2;
 
     unsigned output_pos = 0;
+    unsigned short tmp = 0;
     char* unprocessed = code;
     while (1)
     {
         char* next = strchr(unprocessed, '\n');
         if (next) *next = '\0';
-        output[ output_pos++ ] = EncodeInstruction(unprocessed);
+        if (EncodeInstruction(unprocessed, &tmp))
+        {
+            output[ output_pos++ ] = htobe16(tmp);
+        }
         if (next) unprocessed = next+1;
         else break;
     }
@@ -122,9 +127,13 @@ unsigned Disassemble(const char* file, const char* out_file)
     for (unsigned i = 0; i < bin_len; i += 2)
     {
         unsigned short* cur = (unsigned short*)&bin[i];
-        if (DecodeInstruction( *cur, decoded_str ))
+        if (DecodeInstruction( be16toh(*cur), decoded_str ))
         {
             AppendString(&output_str, &output_len, decoded_str);
+        }
+        else
+        {
+            fprintf(stderr, "Failed to decode instruction '%.4x'\n", *cur);
         }
     }
     free(bin);
@@ -142,7 +151,10 @@ unsigned Disassemble(const char* file, const char* out_file)
 bool DecodeInstruction(unsigned short instr, char* output)
 {
     unsigned index = DecodeOpcode( instr );
-    if (index == INVALID_OPCODE) return false;
+    if (index == INVALID_OPCODE)
+    {
+        return false;
+    }
 
     const char* mnemonic_str = mnemonic_list[ index ].mnemonic;
     const operand* opers     = mnemonic_list[ index ].operands;
@@ -192,7 +204,7 @@ bool AppendString(char** buffer, unsigned* buffer_len, const char* new_str)
     return true;
 }
 
-unsigned short EncodeInstruction(char* instruction)
+bool EncodeInstruction(char* instruction, unsigned short* opcode)
 {
     /*
         Go through every character replacing whitespace with '\0'
@@ -221,7 +233,7 @@ unsigned short EncodeInstruction(char* instruction)
         last = *i;
     }
 
-    if (arg_count == 0) return 0;
+    if (arg_count == 0) return false;
 
     /* Check mnemonic and arg count matches
        Then compare arguments and find the correct one
@@ -240,6 +252,7 @@ unsigned short EncodeInstruction(char* instruction)
         {
             continue;
         }
+        //printf("%s MATCHES %s\n", arg[0], current_op->mnemonic);
 
         match = true;
         modified = current_op->base;
@@ -282,9 +295,10 @@ unsigned short EncodeInstruction(char* instruction)
 
     if (match)
     {
-        return modified;
+        *opcode = modified;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
