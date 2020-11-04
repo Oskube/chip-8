@@ -21,31 +21,25 @@ void PrintCounters(struct timespec* begin, struct timespec* end, unsigned ops, u
 
 int main( int argc, char** argv )
 {
+    if (argc < 2)
+    {
+        fprintf(stderr, "Path to chip8 program is missing!\n");
+        return -3;
+    }
+
     chip8_hw chip8;
     Chip8Init( &chip8 );
-
-    chip8.get_key_blocking = RlGetKeyBlocking;
-    chip8.is_key_down      = RlIsKeyDown;
-
-    RlInitializeWindow(10, "Chip8 - Emulator");
-    /*
-    // Test pattern
-    for(unsigned i = 0; i < CHIP8_GFX_LEN; i++)
-    {
-        unsigned char pattern = 0xaa;
-        if (i * 8 / CHIP8_GFX_W % 2 == 0) pattern = 0x55;
-        chip8.gfx[ i ] = pattern;
-    }
-    */
-
-
-    //const char* prog_path = "priv_IBM Logo.ch8"; // "test.bin")
-    const char* prog_path = "testi.bin";
+    const char* prog_path = argv[1]; // "testi.bin"
     if (!Chip8LoadProgram(&chip8, prog_path)) // "test.bin")
     {
         fprintf(stderr, "Failed to load program %s\n", prog_path);
         return -2;
     }
+
+    chip8.get_key_blocking = RlGetKeyBlocking;
+    chip8.is_key_down      = RlIsKeyDown;
+
+    RlInitializeWindow(10, "Chip8 - Emulator");
 
     const unsigned cpu_freq = CHIP8_CPU_FREQ;
     struct timespec ts_begin = {0};
