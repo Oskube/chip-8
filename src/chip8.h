@@ -1,6 +1,7 @@
 #ifndef CHIP8_H
 #define CHIP8_H
 
+#include <stdio.h>
 #include <stdbool.h>
 
 #define CHIP8_PROG_START    0x200
@@ -54,5 +55,13 @@ static const char chip8_charset[ CHIP8_CHARSET_LEN ] = {
     0xf0, 0x80, 0xf0, 0x80, 0xf0, // E
     0xf0, 0x80, 0xf0, 0x80, 0x80, // F
 };
+
+
+bool Chip8Init( chip8_hw* chip );
+void Chip8Free( chip8_hw* chip );
+bool Chip8LoadProgram( chip8_hw* chip, const char* file );
+bool Chip8Dump( chip8_hw* chip, FILE* output );
+int  Chip8Execute(chip8_hw* chip, unsigned op_count);
+int  Chip8ProcessTimers(chip8_hw* chip, unsigned decrement_count);
 
 #endif // CHIP8_H

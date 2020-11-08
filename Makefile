@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -g
 TARGETS=assembler emulator
-COMPONENTS=util.o opcodes.o decoder.o
+COMPONENTS=util.o opcodes.o decoder.o chip8.o
 COMMON=util.o opcodes.o
 
 # Raylib related
