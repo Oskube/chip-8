@@ -50,6 +50,8 @@ void _2nnn(chip8_hw* chip, unsigned opcode)
 {
     chip->stack[ chip->stack_top ] = chip->PC;
     chip->stack_top++;
+
+    chip->PC = opcode & 0xfff;
 }
 
 void _3xnn(chip8_hw* chip, unsigned opcode)
