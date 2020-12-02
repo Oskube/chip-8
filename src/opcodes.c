@@ -138,9 +138,10 @@ void _8xy4(chip8_hw* chip, unsigned opcode)
     unsigned char* y = NULL;
 
     GetXY(chip, opcode, &x, &y);
-    *x += *y;
+    unsigned tmp = *y;
+    *x += tmp;
 
-    if (*x < *y) // Overflow
+    if (*x < tmp) // Overflow
     {
         chip->V[0xf] = 1;
     }
@@ -155,6 +156,7 @@ void _8xy5(chip8_hw* chip, unsigned opcode)
     unsigned char* x = NULL;
     unsigned char* y = NULL;
 
+    GetXY(chip, opcode, &x, &y);
     if (*x < *y) // Underflow
     {
         chip->V[0xf] = 0; // Borrow
@@ -163,8 +165,6 @@ void _8xy5(chip8_hw* chip, unsigned opcode)
     {
         chip->V[0xf] = 1;
     }
-
-    GetXY(chip, opcode, &x, &y);
     *x -= *y;
 }
 
@@ -183,6 +183,7 @@ void _8xy7(chip8_hw* chip, unsigned opcode)
     unsigned char* x = NULL;
     unsigned char* y = NULL;
 
+    GetXY(chip, opcode, &x, &y);
     if (*y < *x) // Underflow
     {
         chip->V[0xf] = 0; // Borrow
@@ -191,7 +192,6 @@ void _8xy7(chip8_hw* chip, unsigned opcode)
     {
         chip->V[0xf] = 1;
     }
-    GetXY(chip, opcode, &x, &y);
     *x = *y - *x;
 }
 
