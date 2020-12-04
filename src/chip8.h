@@ -12,7 +12,7 @@
 #define CHIP8_CHAR_LEN            5
 #define CHIP8_RAM_CHARSET_BEGIN   0x0
 
-#define REGISTER_V_COUNT    15
+#define REGISTER_V_COUNT    0x10
 #define CHIP8_STACK_LEN     12
 #define CHIP8_GFX_W         64
 #define CHIP8_GFX_H         32

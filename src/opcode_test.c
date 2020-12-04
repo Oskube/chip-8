@@ -4,7 +4,7 @@
 #include "opcodes.h"
 #include "chip8.h"
 
-#define DEBUG_PRINT( fmt, ... )  fprintf(stderr, "\t\t" fmt, __VA_ARGS__)
+#define DEBUG_PRINT( fmt, ... )  fprintf(stderr, "\t\t%s(...): " fmt, __FUNCTION__,__VA_ARGS__)
 //#define DEBUG_PRINT( fmt, ... )
 
 /* Load values to V registers to be tested */
@@ -30,6 +30,10 @@ static int test_8xy7(chip8_hw*);
 static int test_8xyE(chip8_hw*);
 static int test_9xy0(chip8_hw*);
 
+static int test_Annn(chip8_hw*);
+static int test_Bnnn(chip8_hw*);
+static int test_Cxnn(chip8_hw*);
+
 typedef int (*test_fptr)(chip8_hw*);
 typedef struct {
     test_fptr   test_fun;
@@ -47,7 +51,7 @@ const test_entry tests[] =
     { test_6xnn, "Opcode 6xnn" },
     { test_7xnn, "Opcode 7xnn" },
 
-    { test_8xy0, "Opcode 8xy0" }, /* 8xy- tests */
+    { test_8xy0, "Opcode 8xy0" }, /* Test wrappers using same int test_8xxx(...) */
     { test_8xy1, "Opcode 8xy1" },
     { test_8xy2, "Opcode 8xy2" },
     { test_8xy3, "Opcode 8xy3" },
@@ -58,13 +62,18 @@ const test_entry tests[] =
     { test_8xyE, "Opcode 8xyE" },
     { test_9xy0, "Opcode 9xy0" },
 
+    { test_Annn, "Opcode Annn" },
+    { test_Bnnn, "Opcode Bnnn" },
+    { test_Cxnn, "Opcode Cxnn" },
+
     { NULL, NULL },
 };
 
 static const unsigned char values_1[ REGISTER_V_COUNT ] = {
-    0x00, 0x22, 0x33, 0x44, 0x55,
-    0x66, 0x77, 0x88, 0x99, 0xaa,
-    0xbb, 0xcc, 0xdd, 0xee, 0xff
+    0x00, 0x22, 0x33, 0x44,
+    0x55, 0x66, 0x77, 0x88,
+    0x99, 0xaa, 0xbb, 0xcc,
+    0xdd, 0xee, 0xef, 0xff
 };
 
 int main()
@@ -224,9 +233,9 @@ int test_4xnn(chip8_hw* chip)
     {
         unsigned opcode = 0x4000 | 0x11;
         opcode |= (j << 8);
-        _3xnn(chip, opcode);
+        _4xnn(chip, opcode);
     }
-    if (chip->PC != 0)
+    if (chip->PC != REGISTER_V_COUNT * 2)
     {
         DEBUG_PRINT("Expect %d != %d\n", chip->PC, 0);
         return -2;
@@ -408,7 +417,7 @@ static int cmp_8xy5(chip8_hw* chip, unsigned x, unsigned y)
     _8xy5(chip, opcode);
     if (chip->V[ x ] != (expected & 0xff))
     {
-        DEBUG_PRINT("Expect %u != %u(%u)\n", chip->V[ x ], expected & 0xff, expected);
+        DEBUG_PRINT("Expect %u != %u(%u) opcode: 0x%.2x\n", chip->V[ x ], expected & 0xff, expected, opcode);
         return -1;
     }
     if ((expected & (~0xff)) > 0)
@@ -456,12 +465,12 @@ static int cmp_8xy7(chip8_hw* chip, unsigned x, unsigned y)
 {
     if (x == 0xf) return 0; // V[0xf] is has a special meaning here so ignore if it is used as result register
 
-    unsigned expected =  chip->V[ y ] - chip->V[ x ];
+    unsigned expected = chip->V[ y ] - chip->V[ x ];
     unsigned opcode = 0x8007 | x << 8 | y << 4;
     _8xy7(chip, opcode);
     if (chip->V[ x ] != (expected & 0xff))
     {
-        DEBUG_PRINT("Expect %u != %u(%u)\n", chip->V[ x ], expected & 0xff, expected);
+        DEBUG_PRINT("Expect %u != %u(%u) opcode: 0x%.2x\n", chip->V[ x ], expected & 0xff, expected, opcode);
         return -1;
     }
     if ((expected & (~0xff)) > 0)
@@ -572,4 +581,74 @@ int test_8xyE(chip8_hw* chip)
 int test_9xy0(chip8_hw* chip)
 {
     return test_8xxx(chip, cmp_9xy0);
+}
+// -- End of wrappers
+
+
+int test_Annn(chip8_hw* chip)
+{
+    for (unsigned int i = 0; i < 0xfff; ++i)
+    {
+        unsigned opcode = 0xa000 | i;
+        _Annn(chip, opcode);
+        if (chip->I != i)
+        {
+            DEBUG_PRINT("Expect I: %u != %u\n", chip->I, i);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int test_Bnnn(chip8_hw* chip)
+{
+    for (unsigned i = 0; i < 100; ++i)
+    {
+        chip->V[ 0 ] = rand() & 0xff;
+        unsigned value  = rand() & 0xfff;
+        unsigned opcode = 0xb000 | value;
+        unsigned expected = value + chip->V[ 0 ];
+        _Bnnn(chip, opcode);
+        if (chip->PC != expected)
+        {
+            DEBUG_PRINT("Expect PC: %u != %u, opcode: 0x%.4x\n", chip->PC, expected, opcode);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int test_Cxnn(chip8_hw* chip)
+{
+    unsigned char mask[] = { 0x0f, 0xf0, 0xff };
+    for (unsigned m=0; m < 3; ++m)
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        unsigned tries = 0;
+        unsigned opcode = 0xc000 | (v << 8) | mask[ m ];
+        _Cxnn(chip, opcode);
+        unsigned last = chip->V[ v ];
+        for (; tries < 10; ++tries)
+        {
+            _Cxnn(chip, opcode);
+            if ((chip->V[ v ] & ~mask[ m ]) == 0)
+            {
+                if (last != chip->V[ v ])
+                {
+                    break;
+                }
+            }
+            else
+            {
+                DEBUG_PRINT("Expect V[%u] 0x%.2x & 0x%.2x == 0; Mask not working, mask: 0x%.2x\n", v, chip->V[ v ], ~mask[m], mask[m]);
+                return -1;
+            }
+        }
+        if (tries == 10)
+        {
+            DEBUG_PRINT("10 tries without new random value, opcode: 0x%.4x\n", opcode);
+            return -2;
+        }
+    }
+    return 0;
 }

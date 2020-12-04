@@ -157,7 +157,8 @@ void _8xy5(chip8_hw* chip, unsigned opcode)
     unsigned char* y = NULL;
 
     GetXY(chip, opcode, &x, &y);
-    if (*x < *y) // Underflow
+    unsigned char tmp = *y;
+    if (*x < tmp) // Underflow
     {
         chip->V[0xf] = 0; // Borrow
     }
@@ -165,7 +166,7 @@ void _8xy5(chip8_hw* chip, unsigned opcode)
     {
         chip->V[0xf] = 1;
     }
-    *x -= *y;
+    *x -= tmp;
 }
 
 void _8xy6(chip8_hw* chip, unsigned opcode)
@@ -184,7 +185,8 @@ void _8xy7(chip8_hw* chip, unsigned opcode)
     unsigned char* y = NULL;
 
     GetXY(chip, opcode, &x, &y);
-    if (*y < *x) // Underflow
+    unsigned char tmp = *y;
+    if (tmp < *x) // Underflow
     {
         chip->V[0xf] = 0; // Borrow
     }
@@ -192,7 +194,7 @@ void _8xy7(chip8_hw* chip, unsigned opcode)
     {
         chip->V[0xf] = 1;
     }
-    *x = *y - *x;
+    *x = tmp - *x;
 }
 
 void _8xyE(chip8_hw* chip, unsigned opcode)
@@ -238,7 +240,7 @@ void _Bnnn(chip8_hw* chip, unsigned opcode)
 void _Cxnn(chip8_hw* chip, unsigned opcode)
 {
     unsigned x = GET_NIBBLE(opcode, 2);
-    chip->V[x] = rand() & (opcode && 0xff);
+    chip->V[x] = rand() & (opcode & 0xff);
 }
 
 void _Dxyn(chip8_hw* chip, unsigned opcode)
