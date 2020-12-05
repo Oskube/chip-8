@@ -33,6 +33,10 @@ static int test_9xy0(chip8_hw*);
 static int test_Annn(chip8_hw*);
 static int test_Bnnn(chip8_hw*);
 static int test_Cxnn(chip8_hw*);
+#warning TODO: static int test_Dxyn(chip8_hw*);
+static int test_Fx07(chip8_hw*);
+static int test_Fx15(chip8_hw*);
+static int test_Fx18(chip8_hw*);
 
 typedef int (*test_fptr)(chip8_hw*);
 typedef struct {
@@ -65,6 +69,9 @@ const test_entry tests[] =
     { test_Annn, "Opcode Annn" },
     { test_Bnnn, "Opcode Bnnn" },
     { test_Cxnn, "Opcode Cxnn" },
+    { test_Fx07, "Opcode Fx07" },
+    { test_Fx15, "Opcode Fx15" },
+    { test_Fx18, "Opcode Fx18" },
 
     { NULL, NULL },
 };
@@ -651,4 +658,48 @@ int test_Cxnn(chip8_hw* chip)
         }
     }
     return 0;
+}
+
+int test_Fx07(chip8_hw* chip)
+{
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    for (unsigned i=0; i <= 0xff; ++i)
+    {
+        chip->DT = i;
+        unsigned opcode = 0xf007 | (v << 8);
+        _Fx07(chip, opcode);
+        if(chip->V[v] != i)
+        {
+            DEBUG_PRINT("Except %u != %u, opcode: 0x%.4x\n", chip->V[v], i, opcode);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int test_Fx15_Fx18(chip8_hw* chip, unsigned base, instr_fptr op_fun, unsigned char* reg)
+{
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    for (unsigned i=0; i <= 0xff; ++i)
+    {
+        chip->V[v] = i;
+        unsigned opcode = base | (v << 8);
+        op_fun(chip, opcode);
+        if(*reg != i)
+        {
+            DEBUG_PRINT("Except %u != %u, opcode: 0x%.4x\n", *reg, i, opcode);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int test_Fx15(chip8_hw* chip)
+{
+    return test_Fx15_Fx18(chip, 0xf015, _Fx15, &(chip->DT));
+}
+
+int test_Fx18(chip8_hw* chip)
+{
+    return test_Fx15_Fx18(chip, 0xf018, _Fx18, &(chip->ST));
 }
