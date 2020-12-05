@@ -37,6 +37,10 @@ static int test_Cxnn(chip8_hw*);
 static int test_Fx07(chip8_hw*);
 static int test_Fx15(chip8_hw*);
 static int test_Fx18(chip8_hw*);
+static int test_Fx1E(chip8_hw*);
+static int test_Fx29(chip8_hw*);
+static int test_Fx33(chip8_hw*);
+static int test_Fx55_Fx65(chip8_hw*);
 
 typedef int (*test_fptr)(chip8_hw*);
 typedef struct {
@@ -72,10 +76,15 @@ const test_entry tests[] =
     { test_Fx07, "Opcode Fx07" },
     { test_Fx15, "Opcode Fx15" },
     { test_Fx18, "Opcode Fx18" },
+    { test_Fx1E, "Opcode Fx1E" },
+    { test_Fx29, "Opcode Fx29" },
+    { test_Fx33, "Opcode Fx33" },
+    { test_Fx55_Fx65, "Opcode Fx55 & Fx65" },
 
     { NULL, NULL },
 };
 
+static const unsigned char values_0[ REGISTER_V_COUNT ] = { 0 };
 static const unsigned char values_1[ REGISTER_V_COUNT ] = {
     0x00, 0x22, 0x33, 0x44,
     0x55, 0x66, 0x77, 0x88,
@@ -702,4 +711,122 @@ int test_Fx15(chip8_hw* chip)
 int test_Fx18(chip8_hw* chip)
 {
     return test_Fx15_Fx18(chip, 0xf018, _Fx18, &(chip->ST));
+}
+
+int test_Fx1E(chip8_hw* chip)
+{
+    SetVnToValues(chip, values_1);
+    chip->I = rand();
+    for(unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        unsigned expected = (chip->I + chip->V[ v ]) & 0xffff;
+        unsigned opcode = 0xf01e | (v << 8);
+        _Fx1E(chip, opcode);
+        if (chip->I != expected)
+        {
+            DEBUG_PRINT("Except I: %u != %u, opcode: 0x%.4x\n", chip->I, expected, opcode);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int test_Fx29(chip8_hw* chip)
+{
+    const unsigned char vals[] = {
+        0  , 1  , 2  , 3,
+        4  , 5  , 6  , 7,
+        8  , 9  , 0xa, 0xb,
+        0xc, 0xd, 0xe, 0xf
+    };
+    char pos[0x10] = {};
+    for (unsigned i=0; i < 0x10; ++i)
+    {
+        pos[ i ] = CHIP8_RAM_CHARSET_BEGIN + (i * CHIP8_CHAR_LEN);
+    }
+
+    SetVnToValues(chip, vals);
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        unsigned opcode = 0xf029 | (v << 8);
+        _Fx29(chip, opcode);
+        if (chip->I != pos[ v ])
+        {
+            DEBUG_PRINT("Except I: %u != %u, opcode: 0x%.4x\n", chip->I, pos[ v ], opcode);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int test_Fx33(chip8_hw* chip)
+{
+    SetVnToValues(chip, values_1);
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        unsigned bcd[3] = {
+            (chip->V[ v ] / 100) % 10,
+            (chip->V[ v ] / 10 ) % 10,
+             chip->V[ v ] % 10,
+        };
+        unsigned opcode = 0xf033 | (v << 8);
+        _Fx33(chip, opcode);
+        if( chip->ram[chip->I +0] != bcd[ 0 ] &&
+            chip->ram[chip->I +1] != bcd[ 1 ] &&
+            chip->ram[chip->I +2] != bcd[ 2 ]
+        )
+        {
+            DEBUG_PRINT("Except RAM[I]: (%u,%u,%u) != (%u,%u,%u), opcode: 0x%.4x\n",
+                chip->ram[ chip->I ], chip->ram[ chip->I +1 ], chip->ram[ chip->I +2],
+                bcd[0], bcd[1], bcd[2],
+                opcode);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int test_Fx55_Fx65(chip8_hw* chip)
+{
+    SetVnToValues(chip, values_1);
+    unsigned pos[] = {
+        0x100, 0x200, 0x300, 0x400,
+        0x500, 0x600, 0x700, 0x800,
+        0x900, 0xa00, 0xb00, 0xc00,
+        0xd00, 0xe00, 0x000, 0xe80
+    };
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        chip->I = pos[ v ];
+        unsigned opcode = 0xf055 | (v << 8);
+        _Fx55(chip, opcode);
+        for (unsigned i=0; i <= v; ++i)
+        {
+            if (chip->ram[ chip->I +i ] != values_1[ i ])
+            {
+                DEBUG_PRINT("Except RAM[%u]: %u != %u, opcode: 0x%.4x\n",
+                    chip->I+i, chip->ram[ chip->I +i ], values_1[ i ],
+                    opcode);
+                return -1;
+            }
+        }
+    }
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        SetVnToValues(chip, values_0);
+        chip->I = pos[ v ];
+        unsigned opcode = 0xf065 | (v << 8);
+        _Fx65(chip, opcode);
+        for (unsigned i=0; i <= v; ++i)
+        {
+            if (chip->V[ i ] != values_1[ i ])
+            {
+                DEBUG_PRINT("Except V[%u]: %u != %u, opcode: 0x%.4x\n",
+                    i, chip->V[ i ], values_1[ i ],
+                    opcode);
+                return -2;
+            }
+        }
+    }
+    return 0;
 }
