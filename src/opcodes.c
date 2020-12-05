@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <endian.h>
+#include <assert.h>
 
 #include "chip8.h"
 #include "opcodes.h"
@@ -332,13 +333,18 @@ void _Fx1E(chip8_hw* chip, unsigned opcode)
 
 void _Fx29(chip8_hw* chip, unsigned opcode)
 {
-    chip->I = CHIP8_RAM_CHARSET_BEGIN + CHIP8_CHAR_LEN * (opcode & 0xf);
+    unsigned char* x = NULL;
+    unsigned char* y = NULL;
+    GetXY(chip, opcode, &x, &y);
+    chip->I = CHIP8_RAM_CHARSET_BEGIN + CHIP8_CHAR_LEN * (*x);
 }
 
 void _Fx33(chip8_hw* chip, unsigned opcode)
 {
     unsigned val = chip->V[ GET_NIBBLE(opcode, 2) ];
     unsigned pos = chip->I;
+    assert(pos < CHIP8_RAM_LEN-2);
+
     chip->ram[ pos   ] = val / 100;
     chip->ram[ pos+1 ] = (val % 100) / 10;
     chip->ram[ pos+2 ] = (val % 10);
