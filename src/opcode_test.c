@@ -34,7 +34,10 @@ static int test_Annn(chip8_hw*);
 static int test_Bnnn(chip8_hw*);
 static int test_Cxnn(chip8_hw*);
 #warning TODO: static int test_Dxyn(chip8_hw*);
+static int test_Ex9E(chip8_hw*);
+static int test_ExA1(chip8_hw*);
 static int test_Fx07(chip8_hw*);
+static int test_Fx0A(chip8_hw*);
 static int test_Fx15(chip8_hw*);
 static int test_Fx18(chip8_hw*);
 static int test_Fx1E(chip8_hw*);
@@ -73,7 +76,11 @@ const test_entry tests[] =
     { test_Annn, "Opcode Annn" },
     { test_Bnnn, "Opcode Bnnn" },
     { test_Cxnn, "Opcode Cxnn" },
+    //{ test_Dxyn, "Opcode Dxyn" },
+    { test_Ex9E, "Opcode Ex9E" },
+    { test_ExA1, "Opcode ExA1" },
     { test_Fx07, "Opcode Fx07" },
+    { test_Fx0A, "Opcode Fx0A" },
     { test_Fx15, "Opcode Fx15" },
     { test_Fx18, "Opcode Fx18" },
     { test_Fx1E, "Opcode Fx1E" },
@@ -92,6 +99,25 @@ static const unsigned char values_1[ REGISTER_V_COUNT ] = {
     0xdd, 0xee, 0xef, 0xff
 };
 
+static const unsigned char values_ordered[] = {
+    0  , 1  , 2  , 3,
+    4  , 5  , 6  , 7,
+    8  , 9  , 0xa, 0xb,
+    0xc, 0xd, 0xe, 0xf
+};
+
+// Functions for keyboard testing
+static bool key_is_down = false;
+static bool is_key_down(unsigned key)
+{
+    return key_is_down;
+}
+static unsigned key_down_value = 0;
+static unsigned get_key_blocking()
+{
+    return key_down_value;
+}
+
 int main()
 {
     chip8_hw chip;
@@ -101,6 +127,9 @@ int main()
         if (cur->test_fun == NULL) break;
 
         Chip8Init( &chip );
+        chip.is_key_down      = is_key_down;
+        chip.get_key_blocking = get_key_blocking;
+
         printf("Running test %d: '%s'\n", cur_test, cur->name);
         int test_res = cur->test_fun( &chip );
         if ( test_res != 0)
@@ -733,19 +762,13 @@ int test_Fx1E(chip8_hw* chip)
 
 int test_Fx29(chip8_hw* chip)
 {
-    const unsigned char vals[] = {
-        0  , 1  , 2  , 3,
-        4  , 5  , 6  , 7,
-        8  , 9  , 0xa, 0xb,
-        0xc, 0xd, 0xe, 0xf
-    };
     char pos[0x10] = {};
     for (unsigned i=0; i < 0x10; ++i)
     {
         pos[ i ] = CHIP8_RAM_CHARSET_BEGIN + (i * CHIP8_CHAR_LEN);
     }
 
-    SetVnToValues(chip, vals);
+    SetVnToValues(chip, values_ordered);
     for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
     {
         unsigned opcode = 0xf029 | (v << 8);
@@ -825,6 +848,82 @@ int test_Fx55_Fx65(chip8_hw* chip)
                     i, chip->V[ i ], values_1[ i ],
                     opcode);
                 return -2;
+            }
+        }
+    }
+    return 0;
+}
+
+int test_Ex9E(chip8_hw* chip)
+{
+    SetVnToValues(chip, values_ordered);
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        unsigned expected = chip->PC;
+        unsigned opcode = 0xe09e | (v << 8);
+        key_is_down = false;
+        _Ex9E(chip, opcode);
+        if (chip->PC != expected)
+        {
+            DEBUG_PRINT("Except PC: %u != %u, opcode: 0x%.4x\n",
+                chip->PC, expected, opcode);
+            return -1;
+        }
+        expected = chip->PC+2;
+        key_is_down = true;
+        _Ex9E(chip, opcode);
+        if (chip->PC != expected)
+        {
+            DEBUG_PRINT("Except PC: %u != %u, opcode: 0x%.4x\n",
+                chip->PC, expected, opcode);
+            return -2;
+        }
+    }
+    return 0;
+}
+
+int test_ExA1(chip8_hw* chip)
+{
+    SetVnToValues(chip, values_ordered);
+    for (unsigned v=0; v < REGISTER_V_COUNT; ++v)
+    {
+        unsigned expected = chip->PC;
+        unsigned opcode = 0xe0a1 | (v << 8);
+        key_is_down = true;
+        _ExA1(chip, opcode);
+        if (chip->PC != expected)
+        {
+            DEBUG_PRINT("Except PC: %u != %u, opcode: 0x%.4x\n",
+                chip->PC, expected, opcode);
+            return -1;
+        }
+        expected = chip->PC+2;
+        key_is_down = false;
+        _ExA1(chip, opcode);
+        if (chip->PC != expected)
+        {
+            DEBUG_PRINT("Except PC: %u != %u, opcode: 0x%.4x\n",
+                chip->PC, expected, opcode);
+            return -2;
+        }
+    }
+    return 0;
+}
+
+int test_Fx0A(chip8_hw* chip)
+{
+    for (unsigned v=0; v<REGISTER_V_COUNT; ++v)
+    {
+        for (unsigned i=0; i < 0x10; ++i)
+        {
+            key_down_value = i;
+            unsigned opcode = 0xf00a | (v << 8);
+            _Fx0A(chip, opcode);
+            if (chip->V[ v ] != key_down_value)
+            {
+                DEBUG_PRINT("Except V[%u]: %u != %u, opcode: 0x%.4x\n",
+                    v, chip->V[ v ], key_down_value, opcode);
+                return -1;
             }
         }
     }
