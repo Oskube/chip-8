@@ -250,7 +250,6 @@ void _Dxyn(chip8_hw* chip, unsigned opcode)
     unsigned char nibbles[3] = {0};
     GetNibbles(opcode, nibbles);
 
-    unsigned x = chip->V[ nibbles[2] ];
     unsigned y = chip->V[ nibbles[1] ];
 
     chip->V[0xf] = 0;
@@ -258,6 +257,7 @@ void _Dxyn(chip8_hw* chip, unsigned opcode)
     {
         unsigned char sprite = chip->ram[ pos+i ];
 
+        unsigned x = chip->V[ nibbles[2] ];
         y %= CHIP8_GFX_H;
         for (unsigned j = 0; j < 8; j++, x++)
         {
