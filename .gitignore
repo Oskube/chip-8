@@ -2,3 +2,8 @@
 **.o
 
 **priv_*
+
+# built binaries
+emulator
+assembler
+opcode_test
