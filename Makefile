@@ -19,6 +19,7 @@ assembler: $(COMPONENTS) src/assembler.c
 
 opcode_test: $(COMPONENTS) src/opcode_test.c
 	$(CC) -o $@ $^ $(CFLAGS)
+	./$@
 
 %.o: src/%.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(INCLUDE) $(LDLIBS)

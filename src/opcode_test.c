@@ -33,7 +33,7 @@ static int test_9xy0(chip8_hw*);
 static int test_Annn(chip8_hw*);
 static int test_Bnnn(chip8_hw*);
 static int test_Cxnn(chip8_hw*);
-#warning TODO: static int test_Dxyn(chip8_hw*);
+static int test_Dxyn(chip8_hw*);
 static int test_Ex9E(chip8_hw*);
 static int test_ExA1(chip8_hw*);
 static int test_Fx07(chip8_hw*);
@@ -76,7 +76,7 @@ const test_entry tests[] =
     { test_Annn, "Opcode Annn" },
     { test_Bnnn, "Opcode Bnnn" },
     { test_Cxnn, "Opcode Cxnn" },
-    //{ test_Dxyn, "Opcode Dxyn" },
+    { test_Dxyn, "Opcode Dxyn" },
     { test_Ex9E, "Opcode Ex9E" },
     { test_ExA1, "Opcode ExA1" },
     { test_Fx07, "Opcode Fx07" },
@@ -927,5 +927,59 @@ int test_Fx0A(chip8_hw* chip)
             }
         }
     }
+    return 0;
+}
+
+int test_Dxyn(chip8_hw* chip)
+{
+    _Fx1E(chip, 0xf01e); // Point I to mem v[0] (which is 0);
+    _Dxyn(chip, 0xd01f); // Draw sprite to x=v[0], y=v[1]; from mem[I], 0xf rows
+    chip->V[0] = 4;
+    _Dxyn(chip, 0xd01f);
+
+    for (unsigned i=0; i < 0xf; i++)
+    {
+        unsigned gfx_pos = i * (CHIP8_GFX_W/8);
+        unsigned char cmp = chip->ram[i];
+        cmp = cmp | (cmp >> 4);
+        if (chip->gfx[gfx_pos] != cmp)
+        {
+            DEBUG_PRINT("Except gfx[%u]: %u != %u",
+                gfx_pos, chip->gfx[ gfx_pos ], cmp);
+            return -i;
+        }
+    }
+    if (chip->V[0xf] != 0)
+    {
+        DEBUG_PRINT("Except V[0xf] to be 0", "");
+        return -17;
+    }
+
+    // Clear everything
+    chip->V[0] = 0;
+    _Fx1E(chip, 0xf01e);
+    _Dxyn(chip, 0xd01f);
+    chip->V[0] = 4;
+    _Dxyn(chip, 0xd01f);
+
+    for (unsigned i=0; i < 0xf; i++)
+    {
+        unsigned gfx_pos = i * (CHIP8_GFX_W/8);
+        if (chip->gfx[gfx_pos] != 0)
+        {
+            DEBUG_PRINT("Except gfx[%u]: %u != %u",
+                gfx_pos, chip->gfx[ gfx_pos ], 0);
+            return -i;
+        }
+    }
+    // V[0xf] should be set now
+    if (chip->V[0xf] != 1)
+    {
+        DEBUG_PRINT("Except V[0xf] to be set", "");
+        return -18;
+    }
+
+#warning  More tests should be made for this opcode
+
     return 0;
 }
