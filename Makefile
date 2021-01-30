@@ -26,5 +26,5 @@ opcode_test: $(COMPONENTS) src/opcode_test.c
 
 .PHONY: clean
 clean:
-	rm *.o
-	rm $(TARGETS)
+	-rm *.o
+	-rm $(TARGETS)
