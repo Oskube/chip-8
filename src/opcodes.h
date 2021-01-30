@@ -91,9 +91,9 @@ static const mnemonic mnemonic_list[] = {
     { _8xy3, 0x8003, "XOR" , { oper_0x00, oper_00y0, oper_null }},
     { _8xy4, 0x8004, "ADD" , { oper_0x00, oper_00y0, oper_null }},
     { _8xy5, 0x8005, "SUB" , { oper_0x00, oper_00y0, oper_null }},
-    { _8xy6, 0x8006, "SHL" , { oper_0x00, oper_00y0, oper_null }},
+    { _8xy6, 0x8006, "SHR" , { oper_0x00, oper_00y0, oper_null }},
     { _8xy7, 0x8007, "SUBN", { oper_0x00, oper_00y0, oper_null }},
-    { _8xyE, 0x800e, "SHR" , { oper_0x00, oper_null, oper_null }}, /* y operand not used? */
+    { _8xyE, 0x800e, "SHL" , { oper_0x00, oper_null, oper_null }}, /* y operand not used? */
     { _9xy0, 0x9000, "JNE" , { oper_0x00, oper_00y0, oper_null }},
     { _Annn, 0xa000, "MOV" , { oper_i   , oper_0nnn, oper_null }},
     { _Bnnn, 0xb000, "JMP" , { oper_v0  , oper_0nnn, oper_null }},
