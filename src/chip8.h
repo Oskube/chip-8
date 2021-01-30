@@ -21,7 +21,8 @@
 #define CHIP8_CPU_FREQ  500
 #define CHIP8_DT_FREQ   60
 
-typedef struct {
+typedef struct chip8_hw chip8_hw;
+struct chip8_hw {
     unsigned char* ram;
     unsigned char  V[ REGISTER_V_COUNT ]; /* General purpose registers */
     unsigned short I;   /* Address register */
@@ -35,7 +36,10 @@ typedef struct {
 
     bool     (*is_key_down)(unsigned);
     unsigned (*get_key_blocking)();
-} chip8_hw;
+    void     (*draw_screen)(chip8_hw*);
+
+    bool was_blocking; // blocking instruction was run
+};
 
 static const char chip8_charset[ CHIP8_CHARSET_LEN ] = {
     0xf0, 0x90, 0x90, 0x90, 0xf0, // 0

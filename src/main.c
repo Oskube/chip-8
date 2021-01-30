@@ -28,6 +28,7 @@ int main( int argc, char** argv )
 
     chip8.get_key_blocking = RlGetKeyBlocking;
     chip8.is_key_down      = RlIsKeyDown;
+    chip8.draw_screen      = RlDrawScreen;
 
     RlInitializeWindow(10, "Chip8 - Emulator");
 
@@ -54,6 +55,7 @@ int main( int argc, char** argv )
         {
             // Process opcodes
             Chip8Execute(&chip8, pending_ops);
+            if (chip8.was_blocking) break;
         }
 
         unsigned timer_steps = GetStepsFromTimestamps(&(ts[1]), &ts_now, CHIP8_DT_FREQ);
@@ -63,6 +65,12 @@ int main( int argc, char** argv )
             // Decrement delay and sound timers
             Chip8ProcessTimers(&chip8, timer_steps);
             PrintCounters(&ts_begin, &ts_now, ops_count, timer_count);
+        }
+
+        if (chip8.was_blocking)
+        {
+            chip8.was_blocking = false;
+            clock_gettime( CLOCK_MONOTONIC, &(ts[0]) );
         }
     }
     Chip8Dump( &chip8, stdout );

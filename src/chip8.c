@@ -19,6 +19,7 @@ bool Chip8Init( chip8_hw* chip )
 
     chip->get_key_blocking = NULL;
     chip->is_key_down      = NULL;
+    chip->draw_screen      = NULL;
 
     chip->ram = (unsigned char*)calloc( CHIP8_RAM_LEN, sizeof(unsigned char) );
     if ( chip->ram == NULL )

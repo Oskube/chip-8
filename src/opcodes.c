@@ -305,9 +305,13 @@ void _Fx07(chip8_hw* chip, unsigned opcode)
 
 void _Fx0A(chip8_hw* chip, unsigned opcode)
 {
+    // Make sure screen is up to date before blocking
+    if (chip->draw_screen) chip->draw_screen(chip);
+
     unsigned x = GET_NIBBLE(opcode, 2);
     unsigned key = chip->get_key_blocking();
     chip->V[x] = key;
+    chip->was_blocking = true;
 }
 
 void _Fx15(chip8_hw* chip, unsigned opcode)

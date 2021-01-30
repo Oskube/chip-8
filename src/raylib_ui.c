@@ -5,6 +5,7 @@
 
 #define MAX_KEY 0x10
 
+static bool  quit = false;
 static float win_scale = 1;
 static int keymap[ MAX_KEY ] = {
     KEY_ONE,
@@ -37,7 +38,12 @@ void RlInitializeWindow(float scale, const char* title)
 
 bool RlShouldQuit()
 {
-    return WindowShouldClose();
+    // Poll events
+    BeginDrawing();
+    EndDrawing();
+
+    if (WindowShouldClose()) quit = true;
+    return quit;
 }
 
 void RlDrawScreen(chip8_hw* hw)
@@ -72,20 +78,17 @@ bool RlIsKeyDown(unsigned key)
 
 unsigned RlGetKeyBlocking()
 {
-    while (1)
+    while (!RlShouldQuit())
     {
-        int key = GetKeyPressed();
-        unsigned i = 0;
-        for (; i < MAX_KEY; i++)
+        for (unsigned i=0; i < MAX_KEY; i++)
         {
-            if (keymap[i] == key) break;
-        }
-        if (i == MAX_KEY) continue;
-        if (IsKeyDown(key))
-        {
-            return key;
+            if (IsKeyDown(keymap[i]))
+            {
+                return i;
+            }
         }
     }
+    return 0;
 }
 
 void RlClose()
