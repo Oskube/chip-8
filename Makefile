@@ -6,7 +6,7 @@ COMMON=util.o opcodes.o
 
 # Raylib related
 INCLUDE=-I/usr/local/include
-LDLIBS=-lraylib
+LDLIBS=-lraylib -lm
 UI= raylib_ui.o
 
 all: $(TARGETS)

@@ -1,4 +1,7 @@
+#include <stdlib.h>
 #include <assert.h>
+#include <math.h>
+#include <string.h>
 #include "raylib.h"
 
 #include "raylib_ui.h"
@@ -29,11 +32,38 @@ static int keymap[ MAX_KEY ] = {
     KEY_V,
 };
 
+#define MAX_SAMPLES  512
+#define MAX_SAMPLES_PER_UPDATE  4096
+#define AUDIO_TONE_FREQ  220
+#define AUDIO_VOLUME     3000
+static struct {
+    AudioStream stream;
+    short* wave;
+    short* buffer;
+    unsigned wave_length;
+    unsigned last_position;
+} audio;
+
+
 void RlInitializeWindow(float scale, const char* title)
 {
     win_scale = scale;
     InitWindow(CHIP8_GFX_W*scale, CHIP8_GFX_H*scale, title);
     SetTargetFPS(60);
+
+    InitAudioDevice();
+    audio.stream = InitAudioStream(22050, 16, 1);
+
+    PlayAudioStream(audio.stream);
+    audio.wave   = (short*)malloc(sizeof(short) * MAX_SAMPLES);
+    audio.buffer = (short*)malloc(sizeof(short) * MAX_SAMPLES_PER_UPDATE);
+    audio.last_position = 0;
+
+    audio.wave_length = 22050/AUDIO_TONE_FREQ;
+    for (unsigned i = 0; i < audio.wave_length * 2; i++)
+    {
+        audio.wave[i] = (short)(sinf(2*PI*((float)i)/audio.wave_length) * AUDIO_VOLUME);
+    }
 }
 
 bool RlShouldQuit()
@@ -48,6 +78,11 @@ bool RlShouldQuit()
 
 void RlDrawScreen(chip8_hw* hw)
 {
+    if (hw->ST > 0)
+    {
+        RlAudioPlay();
+    }
+
     BeginDrawing();
         ClearBackground(SKYBLUE);
 
@@ -93,5 +128,38 @@ unsigned RlGetKeyBlocking()
 
 void RlClose()
 {
+    CloseAudioStream(audio.stream);
+    free(audio.wave);
+    free(audio.buffer);
+    CloseAudioDevice();
     CloseWindow();
+}
+
+void RlAudioPlay()
+{
+    if (IsAudioStreamProcessed(audio.stream))
+    {
+        unsigned offset = audio.last_position;
+        unsigned w_len = audio.wave_length - offset;
+        if (w_len == 0)  w_len = audio.wave_length;
+
+        for (unsigned pos = 0; pos < MAX_SAMPLES_PER_UPDATE; offset = 0, pos += w_len)
+        {
+            if (pos > 0)
+            {
+                w_len = audio.wave_length;
+            }
+            if ((pos+w_len) > MAX_SAMPLES_PER_UPDATE)
+            {
+                w_len = MAX_SAMPLES_PER_UPDATE - pos;
+            }
+
+            memcpy(audio.buffer + pos,
+                   audio.wave + offset,
+                   w_len * sizeof(short));
+        }
+        audio.last_position = w_len;
+
+        UpdateAudioStream(audio.stream, audio.buffer, MAX_SAMPLES_PER_UPDATE);
+    }
 }

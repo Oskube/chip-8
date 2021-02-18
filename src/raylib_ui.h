@@ -6,3 +6,5 @@ void RlDrawScreen(chip8_hw* hw);
 bool RlIsKeyDown(unsigned key);
 unsigned RlGetKeyBlocking();
 void RlClose();
+
+void RlAudioPlay();
