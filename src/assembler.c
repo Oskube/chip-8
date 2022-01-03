@@ -5,6 +5,7 @@
 
 #include "decoder.h"
 #include "opcodes.h"
+#include "token.h"
 #include "util.h"
 
 /* TODO: Allow hexadecimal numbers in source files */
@@ -82,26 +83,17 @@ unsigned Assemble(const char* source, const char* out_file)
         return -1;
     }
 
-    unsigned short* output = (unsigned short*)calloc(MAX_PROG_LEN, sizeof(unsigned short));
-    if (!output) return -2;
+    unsigned char* output = NULL;
+    unsigned output_len = 0;
+    bool status = CompileSource(code, &output, &output_len);
 
-    unsigned output_pos = 0;
-    unsigned short tmp = 0;
-    char* unprocessed = code;
-    while (1)
+    if(!output)
     {
-        char* next = strchr(unprocessed, '\n');
-        if (next) *next = '\0';
-        if (EncodeInstruction(unprocessed, &tmp))
-        {
-            output[ output_pos++ ] = htobe16(tmp);
-        }
-        if (next) unprocessed = next+1;
-        else break;
+        fprintf(stderr, "Failed to succesfully compile source\n");
+        return -2;
     }
-    free(code);
 
-    if(!WriteFile(out_file, true, (unsigned char*)output, output_pos*2))
+    if(!WriteFile(out_file, true, (unsigned char*)output, output_len))
     {
         fprintf(stderr, "Failed to write output file\n");
         return -3;
