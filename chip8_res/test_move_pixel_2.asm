@@ -13,11 +13,10 @@
 ;        y = 0
 ; JMP to start
 
-; Set initial values
-SPRITE = 0x223
 MAXX   = 64
 MAXY   = 32
 
+; Set initial values
 MOV V2, 5
 MOV I, SPRITE
 
@@ -40,4 +39,4 @@ ADD  V1, 1      ; y++
 SNE  V1, MAXY   ; if y over max height
     JMP ResetY  ; jump back to start and set everything 0
 JMP ResetX
-NOP 128  ; SPRITE
+SPRITE: NOP 0x8000  ; Compiles to MOV V0, V0 but shouldn't be run

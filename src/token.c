@@ -540,7 +540,7 @@ bool AddVariable(compile_data* c_data, const char* name, const unsigned name_len
     var* tmp = GetVariable(c_data, name, name_len);
     if (tmp)
     {
-        //printf("%s: Variable '%.*s' already defined!\n", __FUNCTION__, name_len, name );
+        printf("%s: Variable '%.*s' already defined!\n", __FUNCTION__, name_len, name );
         return false;
     }
 
