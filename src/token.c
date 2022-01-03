@@ -74,7 +74,7 @@ const char* token_to_str[] = {
 typedef struct {
     unsigned type;
     unsigned len;
-    union { // TODO: union could be utilized more and bunionr
+    union { // TODO: union could be utilized more
         unsigned num;
         void* ptr;
     };
