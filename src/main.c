@@ -9,11 +9,16 @@
 unsigned GetStepsFromTimestamps(struct timespec* begin, struct timespec* end, unsigned freq);
 void PrintCounters(struct timespec* begin, struct timespec* end, unsigned ops, unsigned timer);
 
+const char* help_text = \
+"./emulator <path-to-chip8-bin> [-v[v]]\n"
+"\t-v\tVerbose output\n"
+"\t-vv\tMore verbose output\n";
+
 int main( int argc, char** argv )
 {
     if (argc < 2)
     {
-        fprintf(stderr, "Path to chip8 program is missing!\n");
+        fprintf(stderr, "Path to chip8 program is missing!\n%s", help_text);
         return -3;
     }
 
@@ -22,8 +27,27 @@ int main( int argc, char** argv )
     const char* prog_path = argv[1]; // "testi.bin"
     if (!Chip8LoadProgram(&chip8, prog_path)) // "test.bin")
     {
-        fprintf(stderr, "Failed to load program %s\n", prog_path);
+        fprintf(stderr, "Failed to load program %s\n%s", prog_path, help_text);
         return -2;
+    }
+
+    if (argc > 2)
+    {
+        char* arg = argv[2];
+        if (arg[0] == '-' && arg[1] == 'v')
+        {
+            chip8.log_level = 1;
+            if(arg[2] == 'v')
+            {
+                chip8.log_level = 2;
+            }
+        }
+        else
+        {
+            printf("Invalid arguments!\n%s", help_text);
+            Chip8Free( &chip8 );
+            return -3;
+        }
     }
 
     chip8.get_key_blocking = RlGetKeyBlocking;
@@ -64,7 +88,10 @@ int main( int argc, char** argv )
         {
             // Decrement delay and sound timers
             Chip8ProcessTimers(&chip8, timer_steps);
-            PrintCounters(&ts_begin, &ts_now, ops_count, timer_count);
+            if (chip8.log_level >= 1)
+            {
+                PrintCounters(&ts_begin, &ts_now, ops_count, timer_count);
+            }
         }
 
         if (chip8.was_blocking)

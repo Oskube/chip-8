@@ -21,6 +21,8 @@ bool Chip8Init( chip8_hw* chip )
     chip->is_key_down      = NULL;
     chip->draw_screen      = NULL;
 
+    chip->log_level = 0;
+
     chip->ram = (unsigned char*)calloc( CHIP8_RAM_LEN, sizeof(unsigned char) );
     if ( chip->ram == NULL )
     {
@@ -123,7 +125,10 @@ int Chip8Execute(chip8_hw* chip, unsigned op_count)
             return -1;
         }
 
-        printf("Executing opcode index: 0x%.4x[%u] (%s) at %u\n", opcode, op_index, mnemonic_list[op_index].mnemonic, *pc -2);
+        if (chip->log_level >= 2)
+        {
+            printf("Executing opcode index: 0x%.4x[%u] (%s) at %u\n", opcode, op_index, mnemonic_list[op_index].mnemonic, *pc -2);
+        }
         instr_fptr fun = mnemonic_list[op_index].fun;
         fun(chip, opcode);
     }

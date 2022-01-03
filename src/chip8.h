@@ -38,6 +38,8 @@ struct chip8_hw {
     unsigned (*get_key_blocking)();
     void     (*draw_screen)(chip8_hw*);
 
+    unsigned log_level;
+
     bool was_blocking; // blocking instruction was run
 };
 
