@@ -1,9 +1,11 @@
 # Chip-8 emulator
-Chip-8 emulator with own assembler and disassembler. GUI for this emulator is implemented with [raylib](https://github.com/raysan5/raylib). Raylib version 4.0.0 should work.
+Chip-8 emulator with own assembler and disassembler. GUI for this emulator is implemented with [raylib](https://github.com/raysan5/raylib).
+
+Assembler supports labels and simple variable constants. See [chip8_res](chip8_res/) directory for examples.
 
 ## Building project
 ### Dependecies
-At the moment of writing, raylib which is used in for GUI implementation is unavailable from (official) Ubuntu package repositories. See guides in [raylib wiki](https://github.com/raysan5/raylib/wiki) to install it on your system.
+At the moment of writing, raylib which is used in for GUI implementation is unavailable from (official) Ubuntu package repositories. See guides in [raylib wiki](https://github.com/raysan5/raylib/wiki) to install it on your system. Raylib version 4.0.0 should work.
 
 ### Compiling
 Run ```make``` to compile this project.
@@ -73,3 +75,9 @@ n   = 4-bit  value
 | Fx33   | MOV  B, Vx     | Store BCD representation of Vx to memory starting from RAM[I] |
 | Fx55   | MOV  [I], Vx   | RAM[I...] = V0 ... Vx |
 | Fx65   | MOV  Vx, [I]   | Vx = RAM[I]           |
+| ....   | NOP  nnnn      | No operation. Can be used to store data |
+
+## TODO and known issues
+Audio not tested througly. It probably has some issues with the delay timer.
+
+Assembler doesn't count comment lines and error messages can point to wrong rows which can cause headache.
