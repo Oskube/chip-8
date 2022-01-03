@@ -1,5 +1,5 @@
 # Chip-8 emulator
-Chip-8 emulator with own assembler and disassembler. GUI for this emulator is implemented with [raylib](https://github.com/raysan5/raylib).
+Chip-8 emulator with own assembler and disassembler. GUI for this emulator is implemented with [raylib](https://github.com/raysan5/raylib). Raylib version 4.0.0 should work.
 
 ## Building project
 ### Dependecies

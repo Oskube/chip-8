@@ -34,6 +34,7 @@ static int keymap[ MAX_KEY ] = {
 
 #define MAX_SAMPLES  512
 #define MAX_SAMPLES_PER_UPDATE  4096
+#define AUDIO_SAMPLE_RATE 44100
 #define AUDIO_TONE_FREQ  220
 #define AUDIO_VOLUME     3000
 static struct {
@@ -52,14 +53,15 @@ void RlInitializeWindow(float scale, const char* title)
     SetTargetFPS(60);
 
     InitAudioDevice();
-    audio.stream = InitAudioStream(22050, 16, 1);
+    SetAudioStreamBufferSizeDefault(MAX_SAMPLES_PER_UPDATE);
+    audio.stream = LoadAudioStream(AUDIO_SAMPLE_RATE, 16, 1);
 
     PlayAudioStream(audio.stream);
     audio.wave   = (short*)malloc(sizeof(short) * MAX_SAMPLES);
     audio.buffer = (short*)malloc(sizeof(short) * MAX_SAMPLES_PER_UPDATE);
     audio.last_position = 0;
 
-    audio.wave_length = 22050/AUDIO_TONE_FREQ;
+    audio.wave_length = AUDIO_SAMPLE_RATE/AUDIO_TONE_FREQ;
     for (unsigned i = 0; i < audio.wave_length * 2; i++)
     {
         audio.wave[i] = (short)(sinf(2*PI*((float)i)/audio.wave_length) * AUDIO_VOLUME);
@@ -128,7 +130,7 @@ unsigned RlGetKeyBlocking()
 
 void RlClose()
 {
-    CloseAudioStream(audio.stream);
+    UnloadAudioStream(audio.stream);
     free(audio.wave);
     free(audio.buffer);
     CloseAudioDevice();
