@@ -16,7 +16,7 @@ bool ReadFile(const char* file, bool isBinary, unsigned char** output, unsigned*
     long size = ftell(f);
     rewind(f);
 
-    unsigned char* out = (unsigned char*)malloc( size );
+    unsigned char* out = (unsigned char*)malloc( size +1 ); // Add 1 to make sure read non-binary content is null terminated
     if (!out) return false;
 
     size_t read = fread(out, sizeof(unsigned char), size, f);
@@ -26,6 +26,8 @@ bool ReadFile(const char* file, bool isBinary, unsigned char** output, unsigned*
         free(out);
         return false;
     }
+
+    if (!isBinary) out[size] = '\0'; // If text file make sure it is NULL terminater
 
     *output = out;
     *outlen = read;

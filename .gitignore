@@ -8,3 +8,5 @@
 emulator
 assembler
 opcode_test
+*.ch8
+*.tmp*

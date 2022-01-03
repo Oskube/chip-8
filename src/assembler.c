@@ -85,7 +85,8 @@ unsigned Assemble(const char* source, const char* out_file)
 
     unsigned char* output = NULL;
     unsigned output_len = 0;
-    bool status = CompileSource(code, &output, &output_len);
+    CompileSource(code, &output, &output_len);
+    free(code);
 
     if(!output)
     {
@@ -93,14 +94,15 @@ unsigned Assemble(const char* source, const char* out_file)
         return -2;
     }
 
+    unsigned status = 0;
     if(!WriteFile(out_file, true, (unsigned char*)output, output_len))
     {
         fprintf(stderr, "Failed to write output file\n");
-        return -3;
+        status = -3;
     }
     free(output);
 
-    return 0;
+    return status;
 }
 
 unsigned Disassemble(const char* file, const char* out_file)

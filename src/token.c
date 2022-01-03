@@ -505,7 +505,7 @@ var* GetVariable(compile_data* c_data, const char* name, unsigned len)
 {
     var* ret = NULL;
 
-    printf("%s: %.*s\n", __FUNCTION__, len, name );
+    //printf("%s: %.*s\n", __FUNCTION__, len, name );
     node* vars = c_data->variables;
     while( vars != NULL )
     {
@@ -540,7 +540,7 @@ bool AddVariable(compile_data* c_data, const char* name, const unsigned name_len
     var* tmp = GetVariable(c_data, name, name_len);
     if (tmp)
     {
-        printf("%s: Variable '%.*s' already defined!\n", __FUNCTION__, name_len, name );
+        //printf("%s: Variable '%.*s' already defined!\n", __FUNCTION__, name_len, name );
         return false;
     }
 
@@ -551,7 +551,7 @@ bool AddVariable(compile_data* c_data, const char* name, const unsigned name_len
     new_label->value    = val;
 
     c_data->variables = NodeAdd( c_data->variables, (void*)new_label );
-    printf("%s: %.*s = %u\n", __FUNCTION__, new_label->name_len, new_label->name, new_label->value );
+    //printf("%s: %.*s = %u\n", __FUNCTION__, new_label->name_len, new_label->name, new_label->value );
 
     return true;
 }
@@ -647,6 +647,8 @@ bool ProcessTokens(node* tokens, compile_data* data)
 void CreateAllLabels(compile_data* c_data, node* nodes)
 {
     unsigned old_pos = c_data->bufferPos;
+
+    c_data->bufferPos = CHIP8_PROG_START;
     while(nodes)
     {
         token* tok = TokenGetFromNode(nodes);
